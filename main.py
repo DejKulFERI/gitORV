@@ -1,5 +1,27 @@
+#Pomoc implementacije od: https://www.geeksforgeeks.org/python-opencv-roberts-edge-detection/
 import cv2
 import numpy as np
+
+def convolve2D(image, kernel):
+    # Get the dimensions of the image and the kernel
+    rows, cols = image.shape
+    krows, kcols = kernel.shape
+
+    # Define the output image
+    output = np.zeros_like(image)
+
+    # Loop over the image pixels
+    for i in range(rows - krows + 1):
+        for j in range(cols - kcols + 1):
+            # Extract the kernel-sized region from the image
+            region = image[i:i+krows, j:j+kcols]
+            # Compute the dot product between the region and the kernel
+            dot_product = np.sum(region * kernel)
+            # Store the result in the output image
+            output[i+krows//2, j+kcols//2] = dot_product
+
+    return output
+
 
 # Define the Roberts filter function
 def my_roberts(slika):
