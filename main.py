@@ -1,25 +1,20 @@
 import cv2
 import numpy as np
 import math
+from PIL import Image, ImageFilter
 import tkinter as tk
 from tkinter import *
 
 def convolve2D(image, kernel):
-    # Get the dimensions of the image and the kernel
     rows, cols = image.shape
     krows, kcols = kernel.shape
 
-    # Define the output image
     output = np.zeros_like(image)
 
-    # Loop over the image pixels
     for i in range(rows - krows + 1):
         for j in range(cols - kcols + 1):
-            # Extract the kernel-sized region from the image
             region = image[i:i+krows, j:j+kcols]
-            # Compute the dot product between the region and the kernel
             dot_product = np.sum(region * kernel)
-            # Store the result in the output image
             output[i+krows//2, j+kcols//2] = dot_product
 
     return output
@@ -27,61 +22,47 @@ def convolve2D(image, kernel):
 
 #Pomoc implementacije od: https://www.geeksforgeeks.org/python-opencv-roberts-edge-detection/
 def my_roberts(slika):
-    # Define the Roberts kernel
     x = np.array([[1, 0], [0, -1]])
     y = np.array([[0, 1], [-1, 0]])
 
-    # Convert the input image to float32 data type
     slika = slika.astype(np.float32)
     slika /= 255.0
 
-    # Apply the Roberts filter using convolution
     edgeX = convolve2D(slika, x)
     edgeY = convolve2D(slika, y)
 
-    # Compute the magnitude of the edges
     edges_mag = np.sqrt(np.square(edgeX) + np.square(edgeY))
     edges_mag *= 255
-    # Convert the output image to the CV_8U data type
+    
     slika_robov = edges_mag.astype(np.uint8)
     return slika_robov
 
 def my_prewitt(slika):
-    # Define the Prewitt kernel
     x = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
     y = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
 
-    # Convert the input image to float32 data type
     slika = slika.astype(np.float32)
 
-    # Apply the Prewitt filter using convolution
     edgeX = convolve2D(slika, x)
     edgeY = convolve2D(slika, y)
 
-    # Compute the magnitude of the edges
     edges_mag = np.sqrt(np.square(edgeX) + np.square(edgeY))
 
-    # Convert the output image to the CV_8U data type
     slika_robov = edges_mag.astype(np.uint8)
 
     return slika_robov
 
 def my_sobel(slika):
-    # Define the Sobel kernel
     x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
     y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
 
-    # Convert the input image to float32 data type
     slika = slika.astype(np.float32)
 
-    # Apply the Sobel filter using convolution
     edgeX = convolve2D(slika, x)
     edgeY = convolve2D(slika, y)
 
-    # Compute the magnitude of the edges
     edges_mag = np.sqrt(np.square(edgeX) + np.square(edgeY))
 
-    # Convert the output image to the CV_8U data type
     slika_robov = edges_mag.astype(np.uint8)
 
     return slika_robov
@@ -91,9 +72,19 @@ def canny(slika, sp_prag, zg_prag):
     slika_robov = cv2.Canny(slika, zg_prag, sp_prag)
     return slika_robov 
 
-# Read the input image
+
+def spremeni_kontrast(slika, alfa, beta):
+    slika = np.multiply(slika, alfa)
+    slika = np.add(slika, beta)
+    return slika
+
 img = cv2.imread("images/Slika_1.jpg", cv2.IMREAD_GRAYSCALE)
 cv2.imshow("Navadna", img)
+img_canny2 = canny(img, 100, 50)
+img = cv2.GaussianBlur(img,(5,5),0)
+
+img = spremeni_kontrast(img, 1, 50)
+cv2.imshow("Spremenjena", img)
 
 img_roberts = my_roberts(img)
 img_prewitt = my_prewitt(img)
@@ -105,41 +96,6 @@ cv2.imshow("Prewitt", img_prewitt)
 cv2.imshow("Sobel", img_sobel)
 cv2.imshow("Canny", img_canny)
 
-def spremeni_kontrast(slika, alfa, beta):
-    slika = np.multiply(slika, alfa)
-    slika = np.add(slika, beta)
-    return slika
-
-def update_image():
-    alfa = alpha_slider.get()
-    beta = beta_slider.get()
-    new_img = spremeni_kontrast(img, alfa, beta)
-    cv2.imshow("Image", new_img)
-
-# Create the tkinter window
-root = tk.Tk()
-root.title("Image Viewer")
-
-# Create a frame to hold the sliders
-slider_frame = tk.Frame(root)
-slider_frame.pack(side=tk.TOP, fill=tk.BOTH, padx=5, pady=5)
-
-# Create a slider for the alpha value
-alpha_slider = tk.Scale(slider_frame, from_=0.1, to=3.0, resolution=0.1, label="Alpha", orient=tk.HORIZONTAL, length=200, command=update_image)
-alpha_slider.set(1.0)
-alpha_slider.pack(side=tk.LEFT, padx=5)
-
-# Create a slider for the beta value
-beta_slider = tk.Scale(slider_frame, from_=-100.0, to=100.0, resolution=1.0, label="Beta", orient=tk.HORIZONTAL, length=200, command=update_image)
-beta_slider.set(0.0)
-beta_slider.pack(side=tk.LEFT, padx=5)
-
-# waits for user to press any key
-# (this is necessary to avoid Python kernel form crashing)
-
-apply_button = tk.Button(root, text="Apply", command=update_image)
-apply_button.pack(side=tk.TOP, padx=5, pady=5)
-
-root.mainloop()
 cv2.waitKey(0)
+
 cv2.destroyAllWindows()
