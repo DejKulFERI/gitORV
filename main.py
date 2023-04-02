@@ -47,12 +47,23 @@ def my_sobel(slika):
 
     return slika_robov
 
+#Pomagal s pomocjo: https://java2blog.com/cv2-canny-python/
+def canny(slika, sp_prag, zg_prag):
+    slika_robov = cv2.Canny(slika, zg_prag, sp_prag)
+    return slika_robov 
+
 img = cv2.imread("images/Slika_1.jpg", cv2.IMREAD_GRAYSCALE)
 
 img_roberts = my_roberts(img)
 img_prewitt = my_prewitt(img)
 img_sobel = my_sobel(img)
+img_canny = canny(img, 100, 50)
 
-cv2.imwrite("images/roberts.jpg", img_roberts)
-cv2.imwrite("images/prewitt.jpg", img_prewitt)
-cv2.imwrite("images/sobel.jpg", img_sobel)
+cv2.imshow("Roberts", img_roberts)
+cv2.imshow("Prewitt", img_prewitt)
+cv2.imshow("Sobel", img_sobel)
+cv2.imshow("Canny", img_canny)
+  
+cv2.waitKey(0)
+  
+cv2.destroyAllWindows()
